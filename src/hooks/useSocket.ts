@@ -19,7 +19,13 @@ export interface DataRow {
 
 let socket: Socket;
 
-const useSocket = (): DataTableProps | null => {
+const useSocket = ({
+  from,
+  to,
+}: {
+  from: string;
+  to: string;
+}): DataTableProps | null => {
   const [data, setData] = useState<DataTableProps | null>(null);
 
   useEffect(() => {
@@ -32,11 +38,16 @@ const useSocket = (): DataTableProps | null => {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            from: "2021-01-01",
-            to: "2025-01-13",
+            from: from ? from : "2021-01-01",
+            to: to ? to : "2025-01-13",
           }),
         }
       );
+      if (!response.ok) {
+        throw new Error(
+          "Failed to fetch historical data" + JSON.stringify(response.json())
+        );
+      }
       const historicalData = await response.json();
       setData({
         data: historicalData,
@@ -66,7 +77,7 @@ const useSocket = (): DataTableProps | null => {
     return () => {
       socket.disconnect();
     };
-  }, []);
+  }, [from, to]);
 
   // Return the received data from the broadcast
   return data;
